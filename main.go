@@ -19,10 +19,11 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/shorten", handlers.ShortenURL).Methods("POST")
+	r.HandleFunc("/stats/{code}", handlers.GetStats).Methods("GET")
 	r.HandleFunc("/{code}", handlers.RedirectURL).Methods("GET")
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "GoLink is running!")
+    w.WriteHeader(http.StatusOK)
+    fmt.Fprintln(w, "GoLink is running!")
 	}).Methods("GET")
 
 	fmt.Println("🚀 GoLink server running on http://localhost:8080")

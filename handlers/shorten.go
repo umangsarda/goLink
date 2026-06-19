@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/umangsarda/golink/models"
 	"github.com/umangsarda/golink/store"
 )
@@ -39,4 +40,24 @@ func ShortenURL(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(link)
+}
+
+func GetStats(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	code := vars["code"]
+
+	link, err := store.GetLink(code)
+	if err != nil || link == nil {
+		http.Error(w, "Short URL not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"code":       link.Code,
+		"short_url":  link.ShortURL,
+		"long_url":   link.LongURL,
+		"hits":       link.Hits,
+		"created_at": link.CreatedAt,
+	})
 }
