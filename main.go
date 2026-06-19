@@ -7,12 +7,17 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/umangsarda/golink/handlers"
+	"github.com/umangsarda/golink/store"
 )
 
 func main() {
-	r := mux.NewRouter()
+	// init DynamoDB
+	if err := store.InitDynamo(); err != nil {
+		log.Fatal("Failed to init DynamoDB:", err)
+	}
+	fmt.Println("✅ DynamoDB connected")
 
-	// Routes
+	r := mux.NewRouter()
 	r.HandleFunc("/shorten", handlers.ShortenURL).Methods("POST")
 	r.HandleFunc("/{code}", handlers.RedirectURL).Methods("GET")
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

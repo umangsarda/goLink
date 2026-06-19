@@ -7,23 +7,19 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/umangsarda/golink/models"
+	"github.com/umangsarda/golink/store"
 )
-
-// in-memory store for now (we'll swap with DynamoDB tomorrow)
-var linkStore = make(map[string]models.Link)
 
 func ShortenURL(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		LongURL string `json:"long_url"`
 	}
 
-	// parse request body
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.LongURL == "" {
 		http.Error(w, "Invalid request. Provide long_url", http.StatusBadRequest)
 		return
 	}
 
-	// generate short code
 	code := uuid.New().String()[:6]
 
 	link := models.Link{
@@ -34,8 +30,11 @@ func ShortenURL(w http.ResponseWriter, r *http.Request) {
 		Hits:      0,
 	}
 
-	// save to store
-	linkStore[code] = link
+	// save to DynamoDB
+	if err := store.SaveLink(link); err != nil {
+		http.Error(w, "Failed to save link: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
